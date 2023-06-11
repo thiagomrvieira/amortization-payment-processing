@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Amortization;
+use App\Models\Payment;
+use App\Models\Profile;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,6 +15,17 @@ class PaymentSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $amortizations = Amortization::where('state', 'paid')->get();
+
+        foreach ($amortizations as $amortization) {
+            $profile = Profile::inRandomOrder()->first();
+
+            Payment::create([
+                'amortization_id' => $amortization->id,
+                'amount' => $amortization->amount,
+                'state' => $amortization->state,
+                'profile_id' => $profile->id,
+            ]);
+        }
     }
 }
