@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\v1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AmortizationResource;
 use App\Models\Amortization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +19,9 @@ class AmortizationController extends Controller
     {
         try {
 
-            return Amortization::all();
+            return AmortizationResource::collection(
+                Amortization::with('project.promoter')->paginate()
+            );
         } catch (\Exception $e) {
             Log::error('An error occurred in the AmortizationController: '.$e->getMessage());
 
