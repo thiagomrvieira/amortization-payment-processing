@@ -13,26 +13,36 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentService
 {
-    public function processPaymentsBeforeDate($date)
+    /**
+     * Process payments before a specified date.
+     *
+     * @param string $date
+     * @return void
+     */
+    public function processPaymentsBeforeDate($date): void
     {
+        // Retrieve amortizations that are scheduled before the given date and not yet paid
         $query = Amortization::where('schedule_date', '<=', $date)->where('state', '!=', 'paid');
 
+        // Process amortizations in chunks to avoid memory issues
         $query->chunk(100, function (Collection $amortizations) use ($date) {
             DB::beginTransaction();
 
             try {
                 foreach ($amortizations as $amortization) {
                     if ($amortization->state === 'paid') {
-                        continue;
+                        continue; // Skip if the amortization is already paid
                     }
 
                     $project = Project::find($amortization->project_id);
 
+                    // Handle delayed amortization and move to the next one
                     if ($amortization->schedule_date < $date) {
                         $this->handleDelayedAmortization($amortization, $project);
                         continue;
                     }
 
+                    // Handle insufficient funds and move to the next amortization
                     if ($project->wallet_balance < $amortization->amount) {
                         $this->handleInsufficientFunds($amortization, $project);
                         continue;
@@ -40,9 +50,10 @@ class PaymentService
 
                     $this->processPayment($amortization, $project);
                 }
-
+                // Commit the transaction if all payments are processed successfully
                 DB::commit();
             } catch (\Exception $e) {
+                // Rollback the transaction if an exception occurs
                 DB::rollback();
                 Log::error('Payment processing failed: ' . $e->getMessage());
                 throw $e;
@@ -50,7 +61,14 @@ class PaymentService
         });
     }
 
-    private function handleInsufficientFunds($amortization, $project)
+    /**
+     * Handle insufficient funds for an amortization.
+     *
+     * @param Amortization $amortization
+     * @param Project $project
+     * @return void
+     */
+    private function handleInsufficientFunds($amortization, $project): void
     {
         $promoterEmail = $project->promoter->email;
         $profileEmails = $project->profiles->pluck('email')->toArray();
@@ -62,7 +80,14 @@ class PaymentService
 
     }
 
-    private function handleDelayedAmortization($amortization, $project)
+    /**
+     * Handle delayed amortization.
+     *
+     * @param Amortization $amortization
+     * @param Project $project
+     * @return void
+     */
+    private function handleDelayedAmortization($amortization, $project): void
     {
         $promoterEmail = $project->promoter->email;
         $profileEmails = $project->profiles->pluck('email')->toArray();
@@ -73,20 +98,31 @@ class PaymentService
         Log::info('Delayed payment notification sent for amortization ID: ' . $amortization->id);
     }
 
-    private function processPayment($amortization, $project)
+    /**
+     * Process a payment for an amortization.
+     *
+     * @param Amortization $amortization
+     * @param Project $project
+     * @return void
+     */
+    private function processPayment($amortization, $project): void
     {
-        $payment = new Payment();
-        $payment->amortization_id = $amortization->id;
-        $payment->amount = $amortization->amount;
-        $payment->profile_id = $project->profile_id;
-        $payment->state = 'paid';
-        $payment->save();
+        // Start a database transaction to ensure atomicity of the operations
+        DB::transaction(function () use ($amortization, $project) {
+            $payment = new Payment([
+                'amortization_id' => $amortization->id,
+                'amount' => $amortization->amount,
+                'profile_id' => $project->profile_id,
+                'state' => 'paid',
+            ]);
+            $payment->save();
 
-        $project->wallet_balance -= $amortization->amount;
-        $project->save();
+            // Decrement the wallet_balance attribute of the $project model by $amortization->amount
+            $project->decrement('wallet_balance', $amortization->amount);
 
-        $amortization->state = 'paid';
-        $amortization->save();
+            // Update the state attribute of the $amortization model to 'paid'
+            $amortization->update(['state' => 'paid']);
+        });
 
         Log::info('Payment processed successfully for amortization ID: ' . $amortization->id);
     }
