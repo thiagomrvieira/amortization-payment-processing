@@ -1,20 +1,48 @@
-# Laravel Payment Processing Function
+# Payment Processing System
 
-This Laravel function is designed to handle payment processing for amortizations with a schedule date equal to or before a given date. It efficiently handles a large amount of data, including thousands of amortizations and millions of payments. The function ensures that each amortization is paid using the corresponding project's wallet balance. Additionally, if an amortization is delayed, email notifications are sent to the promoter associated with the project and to every profile that was supposed to receive the payment.
+This project implements a payment processing system that handles amortizations and payments for projects. It ensures that payments are processed correctly and handles scenarios such as insufficient funds and delayed payments.
 
-## Functional Requirements
+## Assumptions
 
-- Process payments for amortizations with a schedule date equal to or before a given date.
-- Handle a large amount of data efficiently, including thousands of amortizations and millions of payments.
-- Pay each amortization using the corresponding project's wallet balance.
-- Send email notifications to the promoter and profiles for delayed payments.
+- The project assumes the usage of the Laravel PHP framework.
+- The database schema includes tables for projects, amortizations, payments, profiles and promoters.
+- The project assumes the existence of models: `Project`, `Amortization`, `Payment`, `Profile` and `Promoter`.
+- The payment processing is triggered by calling the `processPaymentsBeforeDate()` method in the `PaymentService` class.
+- The payment processing logic assumes that payments need to be processed before a specified date.
+- An amortization is considered "paid" when a corresponding payment is successfully processed and the amortization's state is updated accordingly.
 
-## Non-Functional Requirements
+## Implementation
 
-- Performance: Optimize the function to handle large volumes of data with acceptable response times.
-- Scalability: Design the solution to scale effectively as data volume increases.
-- Reliability: Ensure robustness and accuracy in payment processing and email notifications.
-- Security: Protect sensitive data, such as wallet balances and email content, from unauthorized access.
-- Maintainability: Follow Laravel best practices for clean and maintainable code.
-- Error Handling: Handle exceptions and errors gracefully, providing informative error messages or logging.
-- Email Delivery: Ensure reliable delivery of email notifications with appropriate handling of failures.
+### PaymentService
+
+- The `PaymentService` class provides methods for processing payments and handling various scenarios.
+- The `processPaymentsBeforeDate($date)` method is the entry point for processing payments before a specified date.
+- Payments are processed in batches of 100 amortizations using the `chunk()` method to optimize memory usage.
+- The method uses a database transaction to ensure atomicity of the payment processing.
+- If an amortization is already paid, it is skipped.
+- If an amortization is delayed, an email notification is sent to the project's promoter and profiles.
+- If a project has insufficient funds, an email notification is sent to the project's promoter and profiles.
+- For successful payments, a payment record is created, the project's wallet balance is updated, and the amortization state is marked as paid.
+
+### Logging
+
+- The `Log` facade from Laravel is used for logging payment processing events.
+- Informational log messages are generated for successful payment processing, insufficient funds, and delayed payments.
+- Error log messages are generated if any exception occurs during payment processing.
+
+### Queue System (TODO)
+
+- To handle large volumes of payments efficiently, a queue system can be implemented.
+- The code snippet in the README demonstrates the usage of Laravel's queue system for processing payments.
+- By dispatching the `PaymentProcessingJob` to a queue, payments can be processed asynchronously, improving scalability.
+
+## Setup and Configuration
+
+1. Clone the project repository.
+2. Install the required dependencies using Composer.
+3. Configure the database connection in the `.env` file.
+4. Run the database migrations to create the necessary tables.
+5. Customize the email notifications and logging configurations as per your needs.
+6. You can now use the payment processing system by calling the `processPaymentsBeforeDate()` method.
+
+
