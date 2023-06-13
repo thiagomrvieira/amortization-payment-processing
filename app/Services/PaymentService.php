@@ -2,22 +2,21 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\DB;
-use App\Models\Project;
+use App\Mail\DelayedPaymentNotification;
 use App\Models\Amortization;
 use App\Models\Payment;
-use App\Mail\DelayedPaymentNotification;
+use App\Models\Project;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PaymentService
 {
     /**
      * Process payments before a specified date.
      *
-     * @param string $date
-     * @return void
+     * @param  string  $date
      */
     public function processPaymentsBeforeDate($date): void
     {
@@ -39,12 +38,14 @@ class PaymentService
                     // Handle delayed amortization and move to the next one
                     if ($amortization->schedule_date < $date) {
                         $this->handleDelayedAmortization($amortization, $project);
+
                         continue;
                     }
 
                     // Handle insufficient funds and move to the next amortization
                     if ($project->wallet_balance < $amortization->amount) {
                         $this->handleInsufficientFunds($amortization, $project);
+
                         continue;
                     }
 
@@ -55,7 +56,7 @@ class PaymentService
             } catch (\Exception $e) {
                 // Rollback the transaction if an exception occurs
                 DB::rollback();
-                Log::error('Payment processing failed: ' . $e->getMessage());
+                Log::error('Payment processing failed: '.$e->getMessage());
                 throw $e;
             }
         });
@@ -64,9 +65,8 @@ class PaymentService
     /**
      * Handle insufficient funds for an amortization.
      *
-     * @param Amortization $amortization
-     * @param Project $project
-     * @return void
+     * @param  Amortization  $amortization
+     * @param  Project  $project
      */
     private function handleInsufficientFunds($amortization, $project): void
     {
@@ -76,16 +76,15 @@ class PaymentService
 
         Mail::to($emailRecipients)->send(new DelayedPaymentNotification($amortization));
 
-        Log::info('Insufficient funds. Email notification sent for amortization ID: ' . $amortization->id);
+        Log::info('Insufficient funds. Email notification sent for amortization ID: '.$amortization->id);
 
     }
 
     /**
      * Handle delayed amortization.
      *
-     * @param Amortization $amortization
-     * @param Project $project
-     * @return void
+     * @param  Amortization  $amortization
+     * @param  Project  $project
      */
     private function handleDelayedAmortization($amortization, $project): void
     {
@@ -95,15 +94,14 @@ class PaymentService
 
         Mail::to($emailRecipients)->send(new DelayedPaymentNotification($amortization));
 
-        Log::info('Delayed payment notification sent for amortization ID: ' . $amortization->id);
+        Log::info('Delayed payment notification sent for amortization ID: '.$amortization->id);
     }
 
     /**
      * Process a payment for an amortization.
      *
-     * @param Amortization $amortization
-     * @param Project $project
-     * @return void
+     * @param  Amortization  $amortization
+     * @param  Project  $project
      */
     private function processPayment($amortization, $project): void
     {
@@ -124,6 +122,6 @@ class PaymentService
             $amortization->update(['state' => 'paid']);
         });
 
-        Log::info('Payment processed successfully for amortization ID: ' . $amortization->id);
+        Log::info('Payment processed successfully for amortization ID: '.$amortization->id);
     }
 }

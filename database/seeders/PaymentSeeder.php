@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Amortization;
 use App\Models\Payment;
 use App\Models\Profile;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PaymentSeeder extends Seeder

@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 class AmortizationController extends Controller
 {
-
     public function __construct(
         public AmortizationService $amortizationService)
-    { }
+    {
+    }
 
     /**
      * Display a listing of Amortization.

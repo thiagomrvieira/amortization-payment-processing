@@ -11,8 +11,7 @@ class AmortizationService
     /**
      * Get all amortizations with pagination and sorting.
      *
-     * @param AmortizationIndexRequest $request The request object containing the parameters for pagination and sorting.
-     * @return \Illuminate\Pagination\LengthAwarePaginator
+     * @param  AmortizationIndexRequest  $request The request object containing the parameters for pagination and sorting.
      */
     public function getAllAmortizations(AmortizationIndexRequest $request): LengthAwarePaginator
     {

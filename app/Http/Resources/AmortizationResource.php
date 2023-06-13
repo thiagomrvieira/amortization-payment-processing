@@ -20,7 +20,7 @@ class AmortizationResource extends JsonResource
             'schedule_date' => Carbon::parse($this->schedule_date)->format('d-m-Y'),
             'paid_at' => $this->state === 'paid' ? Carbon::parse($this->schedule_date)->diffForHumans() : null,
             'state' => $this->state,
-            'amount' => number_format($this->amount,2,",","."),
+            'amount' => number_format($this->amount, 2, ',', '.'),
             'project' => new ProjectResource($this->project),
         ];
     }
