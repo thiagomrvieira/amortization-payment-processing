@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Servers data</title>
+	<title>Amortization</title>
 
 	@vite('resources/css/app.css')
 </head>
