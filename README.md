@@ -49,7 +49,7 @@ This project implements a payment processing system that handles amortizations a
    php artisan migrate --seed
    ```
 5. Build and run the Vue.js app:
-```shell
+    ```shell
     # Install the required dependencies
     npm install
 
@@ -58,4 +58,5 @@ This project implements a payment processing system that handles amortizations a
 
     # Start the development server
     npm run serve
-```
+    ```
+6. You can now use the payment processing system by calling the processPaymentsBeforeDate() method.
