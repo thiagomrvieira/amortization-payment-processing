@@ -17,7 +17,9 @@ class ProjectResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'description' => $this->description,
+            'description' => strlen($this->description) > 60 ?
+                                substr($this->description, 0, 60) . '...' :
+                                $this->description,
             'promoter' => new PromoterResource($this->promoter),
         ];
     }

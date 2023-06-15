@@ -1,5 +1,8 @@
 @extends('master')
 
 @section('content')
-    <amortization-list />
+    <div class="container">
+
+        <amortization-list />
+    </div>
 @endsection
